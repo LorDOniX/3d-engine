@@ -1,4 +1,5 @@
 import Vector3 from "./vector3";
+import Matrix from "./matrix";
 import Ray from "./ray";
 import * as math from "./math";
 
@@ -15,7 +16,8 @@ export default class Camera {
 		// oko
 		this._eye = new Vector3();
 		// transformacni matice
-		this._tm = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+		this._tm = new Matrix(3, 3);
+		this._tm.single();
 
 		this._showInfo();
 	}
@@ -32,25 +34,16 @@ export default class Camera {
 		this._eye = eye;
 	}
 
-	setTransformationMatrix(tm) {
-		this._tm = tm;
+	rotateX(angle) {
+		this._tm.rotateX(angle);
 	}
 
-	getAngles() {
-		let tm = this._tm;
-		let yaw = Math.atan2(-tm[2][0], tm[0][0]);
-		let pitch = Math.asin(tm[1][0]);
-		let roll = Math.atan2(-tm[1][2], tm[1][1]);
+	rotateY(angle) {
+		this._tm.rotateY(angle);
+	}
 
-		yaw = Math.round(yaw / Math.PI * 180);
-		pitch = Math.round(pitch / Math.PI * 180);
-		roll = Math.round(roll / Math.PI * 180);
-
-		return {
-			yaw,
-			pitch,
-			roll
-		};
+	rotateZ(angle) {
+		this._tm.rotateZ(angle);
 	}
 
 	generateRay(sx, sy) {
@@ -60,10 +53,12 @@ export default class Camera {
 		let direction = new Vector3(x, -y, 1);
 		direction.normalize();
 
+		let tm = this._tm.data;
+
 		let directionTransformed = new Vector3(
-			this._tm[0][0] * direction.x + this._tm[0][1] * direction.y + this._tm[0][2] * direction.z,
-			this._tm[1][0] * direction.x + this._tm[1][1] * direction.y + this._tm[1][2] * direction.z,
-			this._tm[2][0] * direction.x + this._tm[2][1] * direction.y + this._tm[2][2] * direction.z
+			tm[0][0] * direction.x + tm[0][1] * direction.y + tm[0][2] * direction.z,
+			tm[1][0] * direction.x + tm[1][1] * direction.y + tm[1][2] * direction.z,
+			tm[2][0] * direction.x + tm[2][1] * direction.y + tm[2][2] * direction.z
 		);
 		// paprsek pozadi
 		let bgDirectionRaw = new Vector3(x, y, 1); // smer noveho paprsku
@@ -77,86 +72,6 @@ export default class Camera {
 
 		// paprsek
 		return (new Ray(this._eye, directionTransformed, bgDirection));
-	}
-
-	_getRotateX(angle) {
-		let angleRad = angle / 180 * Math.PI;
-
-		return [
-			[1, 0, 0],
-			[0, Math.cos(angleRad), -Math.sin(angleRad)],
-			[0, Math.sin(angleRad), Math.cos(angleRad)]
-		];
-	}
-
-	_getRotateY(angle) {
-		let angleRad = angle / 180 * Math.PI;
-
-		return [
-			[Math.cos(angleRad), 0, Math.sin(angleRad)],
-			[0, 1, 0],
-			[-Math.sin(angleRad), 0, Math.cos(angleRad)]
-		];
-	}
-
-	_getRotateZ(angle) {
-		let angleRad = angle / 180 * Math.PI;
-
-		return [
-			[Math.cos(angleRad), -Math.sin(angleRad), 0],
-			[Math.sin(angleRad), Math.cos(angleRad), 0],
-			[0, 0, 1]
-		];
-	}
-
-	rotateX(angle) {
-		this._tm = this.rotateMatrix(this._tm, this._getRotateX(angle));
-	}
-
-	rotateY(angle) {
-		this._tm = this.rotateMatrix(this._tm, this._getRotateY(angle));
-	}
-
-	rotateZ(angle) {
-		this._tm = this.rotateMatrix(this._tm, this._getRotateZ(angle));
-	}
-
-	rotateMatrix(a, b) {
-		// a - radky
-		// b - sloupce
-		// c - A radky, B sloupce
-		let aRows = a.length;
-		let aCols = a.length ? a[0].length : 0;
-		let bRows = b.length;
-		let bCols = b.length ? b[0].length : 0;
-
-		if (aRows == bCols && aCols == bRows) {
-			// init
-			let output = new Array(aRows);
-
-			for (let i = 0; i < aRows; i++) {
-				output[i] = new Array(bCols);
-			}
-
-			// data
-			for (let i = 0; i < aRows; i++) {
-				for (let j = 0; j < bCols; j++) {
-					let value = 0;
-
-					for (let k = 0; k < aCols; k++) {
-						value += a[i][k] * b[k][j];
-					}
-
-					output[i][j] = value;
-				}
-			}
-
-			return output;
-		}
-		else {
-			console.error("Wrong matrix size!");
-			return null;
-		}
 	}
 
 	_showInfo() {

@@ -39,8 +39,6 @@ class Main {
 		camera.rotateX(110); // nahoru a dolu
 		camera.rotateY(10);
 		camera.rotateZ(10);
-		//camera.rotateZ(-11);
-		console.log(camera.getAngles());
 		//camera.rotateX(15); // nahoru a dolu
 		//camera.rotateY(15) // levo a vpravo
 		//camera.rotateZ(25) dokola
