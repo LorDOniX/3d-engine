@@ -53,12 +53,10 @@ export default class Camera {
 		let direction = new Vector3(x, -y, 1);
 		direction.normalize();
 
-		let tm = this._tm.data;
-
 		let directionTransformed = new Vector3(
-			tm[0][0] * direction.x + tm[0][1] * direction.y + tm[0][2] * direction.z,
-			tm[1][0] * direction.x + tm[1][1] * direction.y + tm[1][2] * direction.z,
-			tm[2][0] * direction.x + tm[2][1] * direction.y + tm[2][2] * direction.z
+			this._tm.get(0, 0) * direction.x + this._tm.get(1, 0) * direction.y + this._tm.get(2, 0) * direction.z,
+			this._tm.get(0, 1) * direction.x + this._tm.get(1, 1) * direction.y + this._tm.get(2, 1) * direction.z,
+			this._tm.get(0, 2) * direction.x + this._tm.get(1, 2) * direction.y + this._tm.get(2, 2) * direction.z
 		);
 		// paprsek pozadi
 		let bgDirectionRaw = new Vector3(x, y, 1); // smer noveho paprsku

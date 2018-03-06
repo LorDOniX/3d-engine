@@ -1,14 +1,9 @@
 function createData(cols, rows) {
-	let matrixData = new Array(rows);
+	let len = cols * rows;
+	let matrixData = new Array(len);
 
-	for (let y = 0; y < rows; y++) {
-		for (let x = 0; x < cols; x++) {
-			if (x == 0) {
-				matrixData[y] = new Array(cols);
-			}
-
-			matrixData[y][x] = 0;
-		}
+	for (let x = 0; x < len; x++) {
+		matrixData[x] = 0;
 	}
 
 	return matrixData;
@@ -19,85 +14,88 @@ function rotateMatrix(type, angle) {
 
 	switch (type) {
 		case "x":
-			return new Matrix([
-				[1, 0, 0],
-				[0, Math.cos(angleRad), -Math.sin(angleRad)],
-				[0, Math.sin(angleRad), Math.cos(angleRad)]
-			]);
+			return new Matrix([1, 0, 0, 0, Math.cos(angleRad), -Math.sin(angleRad), 0, Math.sin(angleRad), Math.cos(angleRad)], 3);
 
 		case "y":
-			return new Matrix([
-				[Math.cos(angleRad), 0, Math.sin(angleRad)],
-				[0, 1, 0],
-				[-Math.sin(angleRad), 0, Math.cos(angleRad)]
-			]);
+			return new Matrix([Math.cos(angleRad), 0, Math.sin(angleRad), 0, 1, 0, -Math.sin(angleRad), 0, Math.cos(angleRad)], 3);
 
 		case "z":
-			return new Matrix([
-				[Math.cos(angleRad), -Math.sin(angleRad), 0],
-				[Math.sin(angleRad), Math.cos(angleRad), 0],
-				[0, 0, 1]
-			]);
+			return new Matrix([Math.cos(angleRad), -Math.sin(angleRad), 0, Math.sin(angleRad), Math.cos(angleRad), 0, 0, 0, 1], 3);
 	}
 }
 
 export default class Matrix {
+	// -
+	// data cols
+	// rows cols
 	constructor() {
 		let len = arguments.length;
+		let data = [];
+		let rows = 0;
+		let cols = 0;
 		
 		if (len == 2 && typeof arguments[0] === "number" && typeof arguments[1] === "number") {
-			this._data = createData(arguments[0], arguments[1]);
+			rows = arguments[0];
+			cols = arguments[1];
+
+			data = createData(rows, cols);
 		}
-		else if (len == 1 && Array.isArray(arguments[0])) {
-			this._data = arguments[0];
+		else if (len == 2 && Array.isArray(arguments[0]) && typeof arguments[1] === "number") {
+			data = arguments[0];
+			cols = arguments[1];
+			rows = data.length / cols;
 		}
-		else {
-			this._data = [[]];
-		}
+
+		this._data = data;
+		this._cols = cols;
+		this._rows = rows;
 	}
 
-	get data() {
-		return this._data;
+	get(x, y) {
+		y = typeof y === "number" ? y : 0;
+
+		let cols = this.size.cols;
+
+		return (this._data[x + y * cols]);
 	}
 
 	get size() {
-		let rows = Array.isArray(this._data) ? this._data.length : 0;
-		let cols = Array.isArray(this._data) && this._data.length && Array.isArray(this._data[0]) ? this._data[0].length : 0;
-
 		return {
-			rows,
-			cols
+			len: this._data.length,
+			rows: this._rows,
+			cols: this._cols
 		};
 	}
 
 	empty() {
-		let size = this.size;
-
-		if (size.rows == size.cols) {
-			for (let y = 0; y < size.rows; y++) {
-				for (let x = 0; x < size.cols; x++) {
-					this._data[y][x] = 0;
-				}
-			}
-		}
+		this._data.forEach((i, ind) => {
+			this._data[ind] = 0;
+		});
 	}
 
 	single() {
 		let size = this.size;
 
 		if (size.rows == size.cols) {
-			for (let y = 0; y < size.rows; y++) {
-				for (let x = 0; x < size.cols; x++) {
-					this._data[y][x] = y == x ? 1 : 0;
+			let x = 0;
+			let y = 0;
+
+			this._data.forEach((i, ind) => {
+				this._data[ind] = x == y ? 1 : 0;
+				x++;
+
+				if (x == size.cols) {
+					x = 0;
+					y++;
 				}
-			}
+			});
 		}
 	}
 
 	getAngles() {
-		let yaw = Math.atan2(-this._data[2][0], this._data[0][0]);
-		let pitch = Math.asin(this._data[1][0]);
-		let roll = Math.atan2(-this._data[1][2], this._data[1][1]);
+		let yaw = Math.atan2(-this.get(0, 2), this.get(0, 0));
+		let pitch = Math.asin(this.get(0, 1));
+		let roll = Math.atan2(-this.get(2, 1), this.get(1, 1));
 
 		yaw = Math.round(yaw / Math.PI * 180);
 		pitch = Math.round(pitch / Math.PI * 180);
@@ -112,23 +110,26 @@ export default class Matrix {
 
 	rotateX(angle) {
 		let b = rotateMatrix("x", angle);
-		let c = rotate(this, b);
 
-		this._data = c.data;
+		this.apply(rotate(this, b));
 	}
 
 	rotateY(angle) {
 		let b = rotateMatrix("y", angle);
-		let c = rotate(this, b);
 
-		this._data = c.data;
+		this.apply(rotate(this, b));
 	}
 
 	rotateZ(angle) {
 		let b = rotateMatrix("z", angle);
-		let c = rotate(this, b);
 
-		this._data = c.data;
+		this.apply(rotate(this, b));
+	}
+
+	apply(matrix) {
+		this._data.forEach((i, ind) => {
+			this._data[ind] = matrix.get(ind);
+		});
 	}
 }
 
@@ -144,14 +145,14 @@ export function rotate(a, b) {
 				let value = 0;
 
 				for (let z = 0; z < aSize.cols; z++) {
-					value += a.data[y][z] * b.data[z][x];
+					value += a.get(z, y) * b.get(x, z);
 				}
 
-				output[y][x] = value;
+				output[x + y * bSize.cols] = value;
 			}
 		}
 
-		return new Matrix(output);
+		return new Matrix(output, bSize.cols);
 	}
 	else {
 		console.error("Wrong matrix size!");
