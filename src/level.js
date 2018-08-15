@@ -1,4 +1,5 @@
 import * as myMath from "./math";
+import * as Material from "./material";
 
 export default class Level {
 	// items - pole poli, [y0: [x0, x1], y1: [x0, y1]]
@@ -43,7 +44,8 @@ export default class Level {
 						x: tile.position.x,
 						y: tile.position.y,
 						tile,
-						dist
+						dist,
+						isWall: tile.type == Material.WALL
 					});
 
 					lm.push(parseFloat(dist.toFixed(2)));
@@ -56,6 +58,7 @@ export default class Level {
 			rom.push(lm);
 		});
 
+		console.log(items);
 		console.log(rom);
 	}
 }

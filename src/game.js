@@ -20,7 +20,7 @@ export default class Game {
 		let r2 = this._player.generateRay(midAngle);
 		let r3 = this._player.generateRay(toAngle);
 
-		this._level.getIntersection(this._player.generateRay(270));
+		this._level.getIntersection(this._player.generateRay(320));
 	}
 
 	_getPlayer() {
