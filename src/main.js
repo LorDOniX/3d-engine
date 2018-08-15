@@ -1,9 +1,9 @@
 import * as $dom from "./onix/dom";
-import Render from "./render";
+import Game from "./game";
 
 class Main {
 	constructor() {
-		this._render = new Render();
+		this._game = new Game();
 	}
 };
 

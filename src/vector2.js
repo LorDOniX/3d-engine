@@ -35,7 +35,11 @@ export default class Vector2 {
 	}
 
 	norm() {
-		return Math.sqrt(Math.pow(this._x, 2) + Math.pow(this._y, 2));
+		return Math.sqrt(this._x * this._x + this._y * this._y);
+	}
+
+	distance(v) {
+		return Math.sqrt((v.x - this._x) * (v.x - this._x) + (v.y - this._y) * (v.y - this._y));
 	}
 
 	normalize() {

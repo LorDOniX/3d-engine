@@ -14,5 +14,9 @@ export function raySquareIntersection(ray, square) {
 	tmin = Math.max(tmin, Math.min(ty1, ty2));
 	tmax = Math.min(tmax, Math.max(ty1, ty2));
 
-	return (tmax >= tmin);
+	if (tmax < 0 || tmin > tmax) {
+		return false;
+	}
+
+	return true;
 }
