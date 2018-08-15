@@ -23,6 +23,18 @@ export default class Color {
 		return new Color(0, 0, 0);
 	}
 
+	static red() {
+		return new Color(255, 0, 0);
+	}
+
+	static green() {
+		return new Color(0, 255, 0);
+	}
+
+	static blue() {
+		return new Color(0, 0, 255);
+	}
+
 	/**
 	 * vec - bud ma sam hodnoty 0-255, jinak se musi normalizovat.
 	 * 

@@ -18,13 +18,21 @@ export default class Graphics {
 	}
 
 	putPixel(x, y, color) {
-		let pixelData = this._ctx.createImageData(1, 1);
-		let d = pixelData.data;
+		let imgData = this._ctx.createImageData(1, 1);
+		let d = imgData.data;
 		d[0] = color.r;
 		d[1] = color.g;
 		d[2] = color.b;
 		d[3] = color.a;
 
-		this._ctx.putImageData(pixelData, x, y);
+		this._ctx.putImageData(imgData, x, y);
+	}
+
+	putImageData(imgData) {
+		this._ctx.putImageData(imgData, 0, 0);
+	}
+
+	createImageData(width, height) {
+		return this._ctx.createImageData(width, height);
 	}
 }

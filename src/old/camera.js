@@ -49,7 +49,7 @@ export default class Camera {
 	generateRay(sx, sy) {
 		let x = ((2 * sx - this._width) / this._width) * Math.tan(math.deg2Rad(this._fovX * 0.5));
 		let y = ((2 * sy - this._height) / this._height) * Math.tan(math.deg2Rad(this._fovY * 0.5));
-		// smer noveho paprsku
+		// smer noveho paprsku - x, -y, 1
 		let direction = new Vector3(x, -y, 1);
 		direction.normalize();
 
@@ -58,18 +58,9 @@ export default class Camera {
 			this._tm.get(0, 1) * direction.x + this._tm.get(1, 1) * direction.y + this._tm.get(2, 1) * direction.z,
 			this._tm.get(0, 2) * direction.x + this._tm.get(1, 2) * direction.y + this._tm.get(2, 2) * direction.z
 		);
-		// paprsek pozadi
-		let bgDirectionRaw = new Vector3(x, y, 1); // smer noveho paprsku
-		bgDirectionRaw.normalize();
-
-		let bgDirection = new Vector3(
-			-1 * bgDirectionRaw.x + 0 * bgDirectionRaw.y + 0 * bgDirectionRaw.z,
-			0 * bgDirectionRaw.x + -1 * bgDirectionRaw.y + 0 * bgDirectionRaw.z,
-			0 * bgDirectionRaw.x + 0 * bgDirectionRaw.y + -0.5 * bgDirectionRaw.z
-		);
 
 		// paprsek
-		return (new Ray(this._eye, directionTransformed, bgDirection));
+		return (new Ray(this._eye, directionTransformed));
 	}
 
 	_showInfo() {
