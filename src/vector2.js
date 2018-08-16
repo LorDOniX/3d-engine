@@ -50,6 +50,16 @@ export default class Vector2 {
 	}
 
 	/**
+	 * Determinant 2x2 [[x1, y1], [x2, y2]]
+	 * 
+	 * @param  {Vector2} v Druhy vektor
+	 * @return {Number}
+	 */
+	crossProduct(v) {
+		return (this._x * v.y - this._y * v.x);
+	}
+
+	/**
 	 * Skalarni soucet, uhel mezi 2 vektory.
 	 * 
 	 * @param  {Vector2} v Druhy vektor

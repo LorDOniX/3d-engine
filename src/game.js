@@ -3,6 +3,7 @@ import Level from "./level";
 import Render from "./render";
 import Tile from "./tile";
 import * as Material from "./material";
+import Line from "./line";
 
 export default class Game {
 	constructor() {
@@ -20,7 +21,11 @@ export default class Game {
 		let r2 = this._player.generateRay(midAngle);
 		let r3 = this._player.generateRay(toAngle);
 
-		this._level.getIntersection(this._player.generateRay(320));
+		//this._level.getIntersection(this._player.generateRay(320));
+		console.log(this._level.xyz(this._player.generateRay(0), new Line(0, 0, 4, 0)));
+		console.log(this._level.xyz(this._player.generateRay(40), new Line(0, 0, 4, 0)));
+		console.log(this._level.xyz(this._player.generateRay(-40), new Line(0, 0, 4, 0)));
+		console.log(this._level.xyz(this._player.generateRay(-10), new Line(0, 0, 4, 0)));
 	}
 
 	_getPlayer() {

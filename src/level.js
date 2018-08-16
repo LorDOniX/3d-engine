@@ -61,4 +61,8 @@ export default class Level {
 		console.log(items);
 		console.log(rom);
 	}
+
+	xyz(ray, line) {
+		return myMath.rayLineIntersection(ray, line);
+	}
 }
