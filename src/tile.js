@@ -1,19 +1,15 @@
 import Vector2 from "./vector2";
 
 export default class Tile {
-	constructor(type, x, y, width = 1, height = 1) {
-		this._type = type;
+	constructor(x, y, width = 1, height = 1) {
 		this._width = width;
 		this._height = height;
 		this._position = new Vector2(x, y);
 		this._center = null;
 		this._aabb = null;
+		this._items = [];
 
 		this._update();
-	}
-
-	get type() {
-		return this._type;
 	}
 
 	get width() {
@@ -34,6 +30,15 @@ export default class Tile {
 
 	get position() {
 		return this._position;
+	}
+
+	get items() {
+		return this._items;
+	}
+
+	// type - Line
+	addItem(item) {
+		this._items.push(item);
 	}
 
 	_update() {

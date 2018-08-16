@@ -49,6 +49,10 @@ export default class Vector2 {
 		this._y *= rn;
 	}
 
+	isEqual(v) {
+		return (this._x == v.x && this._y == v.y);
+	}
+
 	/**
 	 * Determinant 2x2 [[x1, y1], [x2, y2]]
 	 * 

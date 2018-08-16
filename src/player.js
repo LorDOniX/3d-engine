@@ -18,8 +18,8 @@ export default class Player {
 		this._yaw = value;
 	}
 
-	setPosition(x, y) {
-		this._position.setXY(x, y);
+	setPosition(v) {
+		this._position = v;
 	}
 
 	get yaw() {

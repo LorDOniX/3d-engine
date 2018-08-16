@@ -1,0 +1,4 @@
+TODO
+----
+- trackovani ctvercu u vyslaneho paprsku
+- materialy u kazde cary
