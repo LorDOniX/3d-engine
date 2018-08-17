@@ -15,9 +15,9 @@ export default class Level {
 		return this._height;
 	}
 
-	getTile(x, y) {
-		if (typeof x === "number" && typeof y === "number" && x >= 0 && y >= 0 && x < this._width && y < this._height) {
-			return this._items[y][x];
+	getTile(pos) {
+		if (typeof pos.x === "number" && typeof pos.y === "number" && pos.x >= 0 && pos.y >= 0 && pos.x < this._width && pos.y < this._height) {
+			return this._items[pos.y][pos.x];
 		}
 		else return null;
 	}

@@ -1,106 +1,125 @@
 import Player from "./player";
-import Level from "./level";
+import Level0 from "./level-0";
 import Render from "./render";
-import Tile from "./tile";
-import Line from "./line";
 import Vector2 from "./vector2";
+import Ray from "./ray";
+import Line from "./line";
+import * as myMath from "./math";
 
-const TILE_SIZE = 1;
-// TLC - top left corner, TL - top line, TRC - top right corner, LL - left line, RL - right line, BLC - bottom left corner, BL - bottom line, BRC - bottom right corner
-const PLAYER_MARK = "*";
-const MAP = [
-	["TLC", "TL", "TL", "TL", "TRC"],
-	["LL", "", "", "", "RL"],
-	["LL", "", PLAYER_MARK, "", "RL"],
-	["LL", "", "", "", "RL"],
-	["BLC", "BL", "BL", "BL", "BRC"]
-];
+// def smer pro yaw 0, pulka ctverce
+const DIRECTION = new Vector2(0, 1);
+const FOV = 60;
+const TILE_HEIGHT = 1.2
 
 export default class Game {
-	constructor() {
-		this._player = this._getPlayer();
-		this._level = this._getLevel();
-		this._render = new Render(800, 600);
+	constructor(texture) {
+		this._texture = texture;
+		this._level = Level0.level;
+		this._player = this._getPlayer(Level0.playerPosition);
+		this._render = new Render(320, 160);
 		document.getElementById("container").appendChild(this._render.container);
+
+		this._player.yaw = 0;
+
+		setInterval(() => {
+			this._loop();
+			this._player.yaw += 5;
+			if (this._player.yaw > 360) {
+				this._player.yaw -= 360;
+			}
+		}, 250);
 	}
 
-	_getPlayer() {
+	_loop() {
+		
+		let angle = this._player.yaw - FOV * 0.5;
+		let angleInc = FOV / this._render.width;
+
+		// sirka hrace 32px, vyska 32px
+		// zed sirka 64px, vyska 64px
+		const TEXTURE_SIZE = 64;
+
+		this._render.clear();
+
+		for (let x = 0; x < this._render.width; x++) {
+			// pro kazdy sloupec
+			let ray = this._generateRay(angle);
+			let track = this._track(ray);
+			let z = track.hit.distance * Math.cos((this._player.yaw - angle) / 180 * Math.PI);
+			let wallHeight = this._render.height * TILE_HEIGHT / z;
+			let bottom = this._render.height / 2 * (1 + 1 / z);
+			let top = bottom - wallHeight;
+			let mat = track.hit.tile.material;
+
+			this._render._ctx.drawImage(this._texture, mat.x + Math.round(track.hit.perc * TEXTURE_SIZE), mat.y, 1, TEXTURE_SIZE, x, top, 1, wallHeight);
+
+			angle += angleInc;
+		}
+	}
+
+	_getPlayer(pos) {
 		let player = new Player();
-		let pos = null;
-
-		MAP.forEach((line, y) => {
-			let mainLoop = true;
-
-			line.forEach((i, x) => {
-				if (i == PLAYER_MARK) {
-					pos = new Vector2(x, y);
-					mainLoop = false;
-				}
-				else return true;
-			});
-
-			return mainLoop;
-		});
-		player.setPosition(pos || new Vector2());
+		player.setPosition(pos);
 
 		return player;
 	}
 
-	_getLevel() {
-		let h = MAP.length;
-		let items = [];
+	_generateRay(angle = 0) {
+		let origin = this._player.position.clone();
+		let rad = (360 - angle) / 180 * Math.PI;
+		let x = DIRECTION.x * Math.cos(rad) - DIRECTION.y * Math.sin(rad);
+		let y = DIRECTION.x * Math.sin(rad) + DIRECTION.y * Math.cos(rad);
+		let direction = new Vector2(x, -y); // -y = protoze chceme nahoru odecitat, ne pricitat
 
-		for (let y = 0; y < h; y++) {
-			items.push(MAP[y].map((code, x) => {
-				let tile = new Tile(x, y, TILE_SIZE, TILE_SIZE);
-				let lines = [];
+		return new Ray(origin, direction);
+	}
 
-				switch (code) {
-					case "TLC":
-						lines.push(new Line(0, 0, TILE_SIZE, 0));
-						lines.push(new Line(0, 0, 0, TILE_SIZE));
-						break;
+	_track(ray) {
+		let tiles = [];
+		let hit = null;
 
-					case "TL":
-						lines.push(new Line(x, 0, x + TILE_SIZE, 0));
-						break;
+		myMath.bresenhamLine(ray, posVec => {
+			let output;
+			let tile = this._level.getTile(posVec);
+			tiles.push(tile);
+			// je tam zed, dal nepokracujeme
+			if (tile.wall.length) {
+				let allHits = [];
 
-					case "TRC":
-						lines.push(new Line(x, 0, x + TILE_SIZE, 0));
-						lines.push(new Line(x + TILE_SIZE, 0, x + TILE_SIZE, TILE_SIZE));
-						break;
+				tile.wall.forEach(line => {
+					let lineHit = myMath.rayLineIntersection(ray, line);
 
-					case "LL":
-						lines.push(new Line(0, y, 0, y + TILE_SIZE));
-						break;
+					if (lineHit) {
+						let perc = line.start.distance(lineHit) / line.length;
 
-					case "RL":
-						lines.push(new Line(x + TILE_SIZE, y, x + TILE_SIZE, y + TILE_SIZE));
-						break;
+						allHits.push({
+							lineHit,
+							perc,
+							line,
+							tile,
+							distance: ray.origin.distance(lineHit)
+						});
+					}
+				});
 
-					case "BLC":
-						lines.push(new Line(0, y, 0, y + TILE_SIZE));
-						lines.push(new Line(0, y + TILE_SIZE, TILE_SIZE, y + TILE_SIZE));
-						break;
+				if (allHits.length) {
+					allHits.sort((a, b) => {
+						return (a.distance - b.distance);
+					});
 
-					case "BL":
-						lines.push(new Line(x, y + TILE_SIZE, x + TILE_SIZE, y + TILE_SIZE));
-						break;
-
-					case "BRC":
-						lines.push(new Line(x, y + TILE_SIZE, x + TILE_SIZE, y + TILE_SIZE));
-						lines.push(new Line(x + TILE_SIZE, y, x + TILE_SIZE, y + TILE_SIZE));
-						break;
+					hit = allHits[0];
 				}
 
-				if (lines.length) {
-					lines.forEach(l => tile.addItem(l));
-				}
+				// ukoncime
+				output = true;
+			}
 
-				return tile;
-			}));
-		}
+			return output;
+		});
 
-		return new Level(items);
+		return {
+			tiles,
+			hit
+		};
 	}
 }

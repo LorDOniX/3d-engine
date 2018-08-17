@@ -1,4 +1,6 @@
 import Vector2 from "./vector2";
+import Line from "./line";
+import * as Material from "./material";
 
 export default class Tile {
 	constructor(x, y, width = 1, height = 1) {
@@ -7,7 +9,8 @@ export default class Tile {
 		this._position = new Vector2(x, y);
 		this._center = null;
 		this._aabb = null;
-		this._items = [];
+		this._wall = [];
+		this._material = Material.EMPTY;
 
 		this._update();
 	}
@@ -32,13 +35,23 @@ export default class Tile {
 		return this._position;
 	}
 
-	get items() {
-		return this._items;
+	get wall() {
+		return this._wall;
 	}
 
-	// type - Line
-	addItem(item) {
-		this._items.push(item);
+	get material() {
+		return this._material;
+	}
+
+	createWall(x, y) {
+		this._wall.push(new Line(x, y, x + this._width, y));
+		this._wall.push(new Line(x + this._width, y, x + this._width, y + this._height));
+		this._wall.push(new Line(x + this._width, y + this._height, x, y + this._height));
+		this._wall.push(new Line(x, y + this._height, x, y));
+	}
+
+	setMaterial(material) {
+		this._material = material;
 	}
 
 	_update() {

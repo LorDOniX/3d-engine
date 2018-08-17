@@ -23,21 +23,55 @@ export function raySquareIntersection(ray, square) {
 	return true;
 }
 
-// https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d/
+// https://stackoverflow.com/questions/14307158/how-do-you-check-for-intersection-between-a-line-segment-and-a-line-ray-emanatin
 export function rayLineIntersection(ray, line) {
 	let v1 = ray.origin.minus(line.start);
-	let v2 = line.direction;
-	let v3;
+	let v2 = line.end.minus(line.start);
+	let v3 = new Vector2(-ray.direction.y, ray.direction.x);
+	let dot = v2.dotProduct(v3);
 
-	if (v2.crossProduct(ray.direction) > 0) {
-		v3 = new Vector2(ray.direction.y, -ray.direction.x);
+	if (Math.abs(dot) < 0.000001) return null;
+
+	let t1 = v2.crossProduct(v1) / dot;
+	let t2 = v1.dotProduct(v3) / dot;
+
+	if (t1 >= 0.0 && (t2 >= 0.0 && t2 <= 1.0)) {
+		return ray.origin.plus(ray.direction.mul(t1));
 	}
-	else {
-		v3 = new Vector2(-ray.direction.y, ray.direction.x);
-	}
 
-	let t1 = Math.abs(v2.crossProduct(v1) / v2.dotProduct(v3));
-	let t2 = v1.dotProduct(v3) / v2.dotProduct(v3);
-
-	return (t1 > 0 && t2 < 1 ? ray.origin.plus(ray.direction.mul(t1)) : null);
+	return null;
 };
+
+export function bresenhamLine(ray, stepCb) {
+	let allPos = [new Vector2(ray.origin.x >>> 0, ray.origin.y >>> 0)];
+	let dx = Math.abs(ray.direction.x);
+	let dy = Math.abs(ray.direction.y);
+	let x = ray.origin.x;
+	let y = ray.origin.y;
+	let x_inc = ray.direction.x > 0 ? 1 : -1;
+	let y_inc = ray.direction.y > 0 ? 1 : -1;
+	let error = dx - dy;
+	dx *= 2;
+	dy *= 2;
+
+	while (true) {
+		let posVec = new Vector2(x >>> 0, y >>> 0);
+		let filtered = allPos.filter(i => posVec.isEqual(i));
+
+		if (filtered.length == 0) {
+			allPos.push(posVec);
+
+			// callback - vraci true, ukoncime
+			if (stepCb(posVec)) break;
+		}
+
+		if (error > 0) {
+			x += x_inc;
+			error -= dy;
+		}
+		else {
+			y += y_inc;
+			error += dx;
+		}
+	}
+}

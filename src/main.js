@@ -3,7 +3,11 @@ import Game from "./game";
 
 class Main {
 	constructor() {
-		this._game = new Game();
+		let img = new Image();
+		img.onload = e => {
+			new Game(img);
+		};
+		img.src = "/img/walls.png";
 	}
 };
 

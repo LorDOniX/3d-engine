@@ -72,6 +72,16 @@ class Save {
 			console.log(this._level.xyz(this._player.generateRay(-40), new Line(0, 0, 4, 0)));
 			console.log(this._level.xyz(this._player.generateRay(-10), new Line(0, 0, 4, 0)));
 		}
+
+		let angle = this._player.yaw - FOV * 0.5;
+		let angleInc = FOV / this._render.width;
+		let heightMiddle = this._render.height * 0.5;
+		let playerViewDistance = (this._render.width * 0.5) / Math.tan(FOV / 360 * Math.PI);
+
+		// sirka hrace 32px, vyska 32px
+		// zed sirka 64px, vyska 64px
+
+		console.log(playerViewDistance);
 	}
 
 	_t() {
