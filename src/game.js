@@ -14,30 +14,47 @@ const TILE_HEIGHT = 1.2
 export default class Game {
 	constructor(texture) {
 		this._texture = texture;
+		this._gameLoopBind = this._gameLoop.bind(this);
+		this._lastTime = 0;
 		this._level = Level0.level;
 		this._player = this._getPlayer(Level0.playerPosition);
-		this._render = new Render(320, 160);
+		this._render = new Render(1024, 768);
 		document.getElementById("container").appendChild(this._render.container);
 
 		this._player.yaw = 0;
+		this._player.setPosition(new Vector2(1.5, 1.5));
 
-		setInterval(() => {
+		requestAnimationFrame(this._gameLoopBind);
+		/*setInterval(() => {
 			this._loop();
 			this._player.yaw += 5;
 			if (this._player.yaw > 360) {
 				this._player.yaw -= 360;
 			}
 		}, 250);
+		*/
 	}
 
-	_loop() {
-		
+	_gameLoop(time) {
+		var seconds = (time - this._lastTime) / 1000;
+		this._lastTime = time;
+
+		if (seconds < 0.2) {
+			// vykresleni
+			this._drawFrame(seconds);
+		}
+
+		requestAnimationFrame(this._gameLoopBind);
+	}
+
+	_drawFrame(seconds) {
 		let angle = this._player.yaw - FOV * 0.5;
 		let angleInc = FOV / this._render.width;
 
 		// sirka hrace 32px, vyska 32px
 		// zed sirka 64px, vyska 64px
 		const TEXTURE_SIZE = 64;
+		const LIGHT_RANGE = 5;
 
 		this._render.clear();
 
@@ -51,9 +68,23 @@ export default class Game {
 			let top = bottom - wallHeight;
 			let mat = track.hit.tile.material;
 
+			// render zdi
+			this._render._ctx.globalAlpha = 1;
+			// obrazek, textura obrazek x, textura obrazek y, textura sirka, textura vyska; vykresleni souradnice x, vykresleni souradnice y, vykresleni sirka a vyska
 			this._render._ctx.drawImage(this._texture, mat.x + Math.round(track.hit.perc * TEXTURE_SIZE), mat.y, 1, TEXTURE_SIZE, x, top, 1, wallHeight);
 
+			// svetelnost zdi
+			this._render._ctx.fillStyle = '#000000';
+			this._render._ctx.globalAlpha = Math.max(track.hit.distance / LIGHT_RANGE, 0);
+			this._render._ctx.fillRect(x, top, 1, wallHeight);
+
 			angle += angleInc;
+		}
+
+		// rotace
+		this._player.yaw += seconds * 10;
+		if (this._player.yaw > 360) {
+			this._player.yaw -= 360;
 		}
 	}
 

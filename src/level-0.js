@@ -63,8 +63,6 @@ function get() {
 	items[0][2].setMaterial(Material.PRISON);
 	items[1][4].setMaterial(Material.STONE);
 
-	console.log(items);
-
 	return {
 		level: new Level(items),
 		playerPosition
