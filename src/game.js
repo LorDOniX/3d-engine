@@ -4,42 +4,76 @@ import Render from "./render";
 import Vector2 from "./vector2";
 import Ray from "./ray";
 import Line from "./line";
+import Params from "./params";
 import * as myMath from "./math";
 
-// def smer pro yaw 0, pulka ctverce
-const DIRECTION = new Vector2(0, 1);
-const FOV = 60;
-const TILE_HEIGHT = 1.2
-
 export default class Game {
-	constructor(texture) {
-		this._texture = texture;
+	constructor() {
 		this._gameLoopBind = this._gameLoop.bind(this);
 		this._lastTime = 0;
 		this._level = Level0.level;
 		this._player = this._getPlayer(Level0.playerPosition);
-		this._render = new Render(1024, 768);
+		this._player.setPosition(new Vector2(1.2, 1.3));
+		this._render = new Render({
+			width: 1024,
+			height: 768,
+			noShadow: true
+		});
+		this._keys = {
+			left: false,
+			right: false,
+			up: false,
+			down: false
+		};
 		document.getElementById("container").appendChild(this._render.container);
 
-		this._player.yaw = 0;
-		this._player.setPosition(new Vector2(1.5, 1.5));
+		this._run();
+		//this._columnData(198, -18.3984375);
+	}
 
+	async _run() {
+		await this._render.load();
+		document.addEventListener("keydown", this);
+		document.addEventListener("keyup", this);
 		requestAnimationFrame(this._gameLoopBind);
-		/*setInterval(() => {
-			this._loop();
-			this._player.yaw += 5;
-			if (this._player.yaw > 360) {
-				this._player.yaw -= 360;
-			}
-		}, 250);
-		*/
+	}
+
+	handleEvent(e) {
+		let keyCode;
+
+		switch (e.type) {
+			case "keydown":
+				keyCode = e.which || e.keyCode;
+
+				switch (keyCode) {
+					case 37: this._keys.left = true; break; // vlevo
+					case 39: this._keys.right = true; break; // vpravo
+					case 38: this._keys.up = true; break; // vpred
+					case 40: this._keys.down = true; break; // vpred
+				}
+				break;
+
+			case "keyup":
+				keyCode = e.which || e.keyCode;
+
+				switch (keyCode) {
+					case 37: this._keys.left = false; break; // vlevo
+					case 39: this._keys.right = false; break; // vpravo
+					case 38: this._keys.up = false; break; // vpred
+					case 40: this._keys.down = false; break; // vpred
+				}
+				break;
+		}
 	}
 
 	_gameLoop(time) {
-		var seconds = (time - this._lastTime) / 1000;
+		let seconds = (time - this._lastTime) / 1000;
+
 		this._lastTime = time;
 
 		if (seconds < 0.2) {
+			// update pozice hrace
+			this._playerUpdate(seconds);
 			// vykresleni
 			this._drawFrame(seconds);
 		}
@@ -47,45 +81,72 @@ export default class Game {
 		requestAnimationFrame(this._gameLoopBind);
 	}
 
-	_drawFrame(seconds) {
-		let angle = this._player.yaw - FOV * 0.5;
-		let angleInc = FOV / this._render.width;
+	_playerUpdate(seconds) {
+		if (this._keys.left || this._keys.right) {
+			this._player.yaw = this._player.yaw + Params.PLAYER_MOVE_YAW * seconds * (this._keys.left ? -1 : 1);
+		}
 
-		// sirka hrace 32px, vyska 32px
-		// zed sirka 64px, vyska 64px
-		const TEXTURE_SIZE = 64;
-		const LIGHT_RANGE = 5;
+		if (this._keys.up || this._keys.down) {
+			let testVec = this._moveVector(new Vector2(0, (Params.PLAYER_MOVE_DIRECTION + Params.MIN_DISTANCE) * seconds * (this._keys.up ? 1 : -1)), this._player.yaw);
+			let testPos = this._player.position.plus(testVec);
+
+			// neni to blokujici?
+			if (!this._isBlocking(testPos)) {
+				let moveVec = this._moveVector(new Vector2(0, Params.PLAYER_MOVE_DIRECTION * seconds * (this._keys.up ? 1 : -1)), this._player.yaw);
+				let newPos = this._player.position.plus(moveVec);
+
+				this._player.setPosition(newPos);
+			}
+		}
+	}
+
+	_isBlocking(v) {
+		let tile = this._level.getTile(new Vector2(v.x >>> 0, v.y >>> 0));
+
+		return (tile.wall.length);
+	}
+
+	_drawFrame(seconds) {
+		let angle = this._player.yaw - Params.FOV * 0.5;
+		let angleInc = Params.FOV / this._render.width;
 
 		this._render.clear();
 
+		// pro kazdy sloupec
 		for (let x = 0; x < this._render.width; x++) {
-			// pro kazdy sloupec
-			let ray = this._generateRay(angle);
-			let track = this._track(ray);
-			let z = track.hit.distance * Math.cos((this._player.yaw - angle) / 180 * Math.PI);
-			let wallHeight = this._render.height * TILE_HEIGHT / z;
-			let bottom = this._render.height / 2 * (1 + 1 / z);
-			let top = bottom - wallHeight;
-			let mat = track.hit.tile.material;
+			let columnData = this._columnData(x, angle);
 
-			// render zdi
-			this._render._ctx.globalAlpha = 1;
-			// obrazek, textura obrazek x, textura obrazek y, textura sirka, textura vyska; vykresleni souradnice x, vykresleni souradnice y, vykresleni sirka a vyska
-			this._render._ctx.drawImage(this._texture, mat.x + Math.round(track.hit.perc * TEXTURE_SIZE), mat.y, 1, TEXTURE_SIZE, x, top, 1, wallHeight);
+			// vykreslime zed
+			this._render.drawWall(columnData);
 
-			// svetelnost zdi
-			this._render._ctx.fillStyle = '#000000';
-			this._render._ctx.globalAlpha = Math.max(track.hit.distance / LIGHT_RANGE, 0);
-			this._render._ctx.fillRect(x, top, 1, wallHeight);
-
+			// pro dalsi uhel
 			angle += angleInc;
 		}
+	}
 
-		// rotace
-		this._player.yaw += seconds * 10;
-		if (this._player.yaw > 360) {
-			this._player.yaw -= 360;
-		}
+	_columnData(x, angle) {
+		let ray = this._generateRay(angle);
+		let track = this._track(ray, angle / 180 * Math.PI);
+		// vzdalenost oka ke zdi - vynasobeni cos kvuli rybimu oku
+		let z = track.distance * Math.cos((this._player.yaw - angle) / 180 * Math.PI);
+		// vyska zdi
+		let height = this._render.height * Params.TILE_HEIGHT / z;
+		// spodni hrana
+		let top = (this._render.height / 2 * (1 + 1 / z)) - height;
+		// u x chceme pouze prouzek
+		let tx = track.tile.material.x + Math.round(track.perc * Params.TEXTURE_SIZE);
+		// y se bere cele
+		let ty = track.tile.material.y;
+		let lightRatio = Math.max(track.distance / Params.LIGHT_RANGE, 0);
+
+		return {
+			x,
+			height,
+			top,
+			tx,
+			ty,
+			lightRatio
+		};
 	}
 
 	_getPlayer(pos) {
@@ -96,23 +157,29 @@ export default class Game {
 	}
 
 	_generateRay(angle = 0) {
-		let origin = this._player.position.clone();
-		let rad = (360 - angle) / 180 * Math.PI;
-		let x = DIRECTION.x * Math.cos(rad) - DIRECTION.y * Math.sin(rad);
-		let y = DIRECTION.x * Math.sin(rad) + DIRECTION.y * Math.cos(rad);
-		let direction = new Vector2(x, -y); // -y = protoze chceme nahoru odecitat, ne pricitat
+		return new Ray(this._player.position.clone(), this._moveVector(Params.RAY_DIRECTION, angle));
+	}
 
-		return new Ray(origin, direction);
+	_moveVector(v, angle = 0) {
+		let rad = (360 - angle) / 180 * Math.PI;
+		let x = v.x * Math.cos(rad) - v.y * Math.sin(rad);
+		let y = v.x * Math.sin(rad) + v.y * Math.cos(rad);
+
+		// -y = protoze chceme nahoru odecitat, ne pricitat
+		return (new Vector2(x, -y));
 	}
 
 	_track(ray) {
-		let tiles = [];
-		let hit = null;
+		let output = {
+			distance: 0,
+			tile: null,
+			perc: 0
+		};
 
-		myMath.bresenhamLine(ray, posVec => {
-			let output;
+		myMath.castRayTrack(ray, posVec => {
+			let lineOutput;
 			let tile = this._level.getTile(posVec);
-			tiles.push(tile);
+
 			// je tam zed, dal nepokracujeme
 			if (tile.wall.length) {
 				let allHits = [];
@@ -121,14 +188,9 @@ export default class Game {
 					let lineHit = myMath.rayLineIntersection(ray, line);
 
 					if (lineHit) {
-						let perc = line.start.distance(lineHit) / line.length;
-
 						allHits.push({
-							lineHit,
-							perc,
-							line,
-							tile,
-							distance: ray.origin.distance(lineHit)
+							distance: ray.origin.distance(lineHit),
+							perc: line.getPerc(lineHit)
 						});
 					}
 				});
@@ -138,19 +200,19 @@ export default class Game {
 						return (a.distance - b.distance);
 					});
 
-					hit = allHits[0];
+					// prvni hit je vystupem
+					output = Object.assign(allHits[0], {
+						tile
+					});
 				}
 
 				// ukoncime
-				output = true;
+				lineOutput = true;
 			}
 
-			return output;
+			return lineOutput;
 		});
 
-		return {
-			tiles,
-			hit
-		};
+		return output;
 	}
 }

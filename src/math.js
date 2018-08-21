@@ -1,4 +1,5 @@
 import Vector2 from "./vector2";
+import Params from "./params";
 
 /**
  * square { lb: { x, y }, rt: { x, y } 
@@ -42,6 +43,39 @@ export function rayLineIntersection(ray, line) {
 	return null;
 };
 
+// https://theshoemaker.de/2016/02/ray-casting-in-2d-grids/
+export function castRayTrack(ray, stepCb) {
+	let dirSignX = ray.direction.x > 0 ? 1 : -1;
+	let dirSignY = ray.direction.y > 0 ? 1 : -1;
+	let tileOffsetX = ray.direction.x > 0 ? 1 : 0;
+	let tileOffsetY = ray.direction.y > 0 ? 1 : 0;
+	let curX = ray.origin.x;
+	let curY = ray.origin.y;
+	let tileX = curX >>> 0;
+	let tileY = curY >>> 0;
+	let t = 0;
+
+	while (true) {
+		if (stepCb(new Vector2(tileX, tileY))) break;
+
+		let dtX = ((tileX + tileOffsetX) * Params.GRID_SIZE - curX) / ray.direction.x;
+		let dtY = ((tileY + tileOffsetY) * Params.GRID_SIZE - curY) / ray.direction.y;
+
+		if (dtX < dtY) {
+			t += dtX;
+			tileX += dirSignX;
+		}
+		else {
+			t += dtY;
+			tileY += dirSignY;
+		}
+
+		curX = ray.origin.x + ray.direction.x * t;
+		curY = ray.origin.y + ray.direction.y * t;
+	}
+	
+}
+
 export function bresenhamLine(ray, stepCb) {
 	let allPos = [new Vector2(ray.origin.x >>> 0, ray.origin.y >>> 0)];
 	let dx = Math.abs(ray.direction.x);
@@ -51,8 +85,6 @@ export function bresenhamLine(ray, stepCb) {
 	let x_inc = ray.direction.x > 0 ? 1 : -1;
 	let y_inc = ray.direction.y > 0 ? 1 : -1;
 	let error = dx - dy;
-	dx *= 2;
-	dy *= 2;
 
 	while (true) {
 		let posVec = new Vector2(x >>> 0, y >>> 0);

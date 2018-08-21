@@ -23,4 +23,8 @@ export default class Line {
 	get length() {
 		return this._distance;
 	}
+
+	getPerc(hitPoint) {
+		return Math.min(this._start.distance(hitPoint) / this._distance, 1);
+	}
 }

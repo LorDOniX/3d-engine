@@ -8,6 +8,13 @@ export default class Player {
 	}
 
 	set yaw(value) {
+		if (value > 360) {
+			value -= 360;
+		}
+		else if (value < 0) {
+			value += 360;
+		}
+
 		this._yaw = value;
 	}
 

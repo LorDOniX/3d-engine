@@ -2,7 +2,7 @@ import Level from "./level";
 import Tile from "./tile";
 import Line from "./line";
 import Vector2 from "./vector2";
-import * as Material from "./material";
+import Params from "./params";
 
 // velikost dlazdice
 const TILE_SIZE = 1;
@@ -52,7 +52,7 @@ function get() {
 			switch (code) {
 				case WALL:
 					tile.createWall(x, y);
-					tile.setMaterial(Material.WALL);
+					tile.setMaterial(Params.MATERIAL.WALL);
 					break;
 			}
 
@@ -60,8 +60,8 @@ function get() {
 		}));
 	}
 
-	items[0][2].setMaterial(Material.PRISON);
-	items[1][4].setMaterial(Material.STONE);
+	items[0][2].setMaterial(Params.MATERIAL.PRISON);
+	items[1][4].setMaterial(Params.MATERIAL.STONE);
 
 	return {
 		level: new Level(items),

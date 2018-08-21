@@ -4,7 +4,8 @@ export default class Ray {
 	constructor(origin, direction) {
 		this._origin = origin || new Vector2();
 		this._direction = direction || new Vector2();
-		this._inverted = this._direction.inverted(); // invertovany paprsek
+		// invertovany paprsek
+		this._inverted = this._direction.inverted();
 	}
 
 	get origin() {

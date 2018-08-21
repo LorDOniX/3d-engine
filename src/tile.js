@@ -1,6 +1,6 @@
 import Vector2 from "./vector2";
 import Line from "./line";
-import * as Material from "./material";
+import Params from "./params";
 
 export default class Tile {
 	constructor(x, y, width = 1, height = 1) {
@@ -10,7 +10,7 @@ export default class Tile {
 		this._center = null;
 		this._aabb = null;
 		this._wall = [];
-		this._material = Material.EMPTY;
+		this._material = Params.MATERIAL.EMPTY;
 
 		this._update();
 	}
