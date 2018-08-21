@@ -11,7 +11,8 @@ let params = {
 	MIN_DISTANCE: 10,
 	// seconds end
 	WALL_SIZE: 64,
-	DRAW_WIDTH: 1,
+	// nasobky 2, init 1
+	DRAW_WIDTH: 8,
 	TEXTURE_SIZE,
 	TILE_HEIGHT: 1.2,
 	LIGHT_RANGE: 5,

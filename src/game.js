@@ -13,7 +13,7 @@ export default class Game {
 		this._lastTime = 0;
 		this._level = Level0.level;
 		this._player = this._getPlayer(Level0.playerPosition);
-		this._player.setPosition(new Vector2(1.2, 1.3));
+		//this._player.setPosition(new Vector2(1.2, 1.3));
 		this._render = new Render({
 			width: 1024,
 			height: 768,
@@ -108,13 +108,14 @@ export default class Game {
 
 	_drawFrame(seconds) {
 		let angle = this._player.yaw - Params.FOV * 0.5;
-		let angleInc = Params.FOV / this._render.width;
+		let steps = this._render.width / Params.DRAW_WIDTH;
+		let angleInc = Params.FOV / steps;
 
 		this._render.clear();
 
 		// pro kazdy sloupec
-		for (let x = 0; x < this._render.width; x++) {
-			let columnData = this._columnData(x, angle);
+		for (let x = 0; x < steps; x++) {
+			let columnData = this._columnData(x * Params.DRAW_WIDTH, angle);
 
 			// vykreslime zed
 			this._render.drawWall(columnData);

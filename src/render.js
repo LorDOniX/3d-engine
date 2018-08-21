@@ -38,7 +38,6 @@ export default class Render {
 	clear() {
 		let middleY = this._opts.height * 0.5;
 
-		this._ctx.globalAlpha = 1;
 		this._ctx.fillStyle = Params.COLORS.CELLAR;
 		this._ctx.fillRect(0, 0, this._opts.width, middleY);
 		this._ctx.fillStyle = Params.COLORS.FLOOR;
@@ -46,21 +45,23 @@ export default class Render {
 	}
 
 	drawRectangle(x, y, width, height, color) {
-		this._ctx.globalAlpha = 1;
 		this._ctx.fillStyle = color || Params.COLORS.BLACK;
 		this._ctx.fillRect(x, y, width, height);
 	}
 
 	drawWall(columnData) {
 		// render zdi
-		this._ctx.globalAlpha = 1;
-		this._ctx.drawImage(this._textures.walls, columnData.tx, columnData.ty, Params.DRAW_WIDTH, Params.TEXTURE_SIZE, columnData.x, columnData.top, Params.DRAW_WIDTH, columnData.height);
+		for (let i = 0; i < Params.DRAW_WIDTH; i++) {
+			// po 1px
+			this._ctx.drawImage(this._textures.walls, columnData.tx, columnData.ty, 1, Params.TEXTURE_SIZE, columnData.x + i, columnData.top, 1, columnData.height);
+		}
 
 		// svetelnost zdi
 		if (!this._opts.noShadow) {
 			this._ctx.fillStyle = Params.COLORS.BLACK;
 			this._ctx.globalAlpha = columnData.lightRatio;
 			this._ctx.fillRect(columnData.x, columnData.top, Params.DRAW_WIDTH, columnData.height);
+			this._ctx.globalAlpha = 1;
 		}
 	}
 
