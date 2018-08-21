@@ -11,9 +11,8 @@ export default class Game {
 	constructor() {
 		this._gameLoopBind = this._gameLoop.bind(this);
 		this._lastTime = 0;
-		this._level = Level0.level;
-		this._player = this._getPlayer(Level0.playerPosition);
-		//this._player.setPosition(new Vector2(1.2, 1.3));
+		this._level = Level0;
+		this._player = this._getPlayer(new Vector2(2.5, 2.5));
 		this._render = new Render({
 			width: 1024,
 			height: 768,
@@ -28,7 +27,6 @@ export default class Game {
 		document.getElementById("container").appendChild(this._render.container);
 
 		this._run();
-		//this._columnData(198, -18.3984375);
 	}
 
 	async _run() {
@@ -87,23 +85,33 @@ export default class Game {
 		}
 
 		if (this._keys.up || this._keys.down) {
-			let testVec = this._moveVector(new Vector2(0, (Params.PLAYER_MOVE_DIRECTION + Params.MIN_DISTANCE) * seconds * (this._keys.up ? 1 : -1)), this._player.yaw);
+			let testVec = this._getMoveVector(seconds, true);
+			let playerPos = this._player.position;
 			let testPos = this._player.position.plus(testVec);
+			let xTest = !this._isBlocking(testPos.x, playerPos.y);
+			let yTest = !this._isBlocking(playerPos.x, testPos.y);
 
-			// neni to blokujici?
-			if (!this._isBlocking(testPos)) {
-				let moveVec = this._moveVector(new Vector2(0, Params.PLAYER_MOVE_DIRECTION * seconds * (this._keys.up ? 1 : -1)), this._player.yaw);
-				let newPos = this._player.position.plus(moveVec);
+			if (xTest || yTest) {
+				let newVec = this._getMoveVector(seconds);
+				let newPos = this._player.position.plus(newVec);
 
-				this._player.setPosition(newPos);
+				this._player.setPosition(new Vector2(xTest ? newPos.x : playerPos.x, yTest ? newPos.y : playerPos.y));
 			}
 		}
 	}
 
-	_isBlocking(v) {
-		let tile = this._level.getTile(new Vector2(v.x >>> 0, v.y >>> 0));
+	_getMoveVector(seconds, withMinDistance) {
+		let minDistance = withMinDistance ? Params.MIN_DISTANCE : 0;
+		let y = (Params.PLAYER_MOVE_DIRECTION + minDistance) * seconds * (this._keys.up ? 1 : -1);
 
-		return (tile.wall.length);
+		// novy smerovy vektor posunuty podle hrace
+		return (this._moveVector(new Vector2(0, y), this._player.yaw))
+	}
+
+	_isBlocking(x, y) {
+		let tile = this._level.getTile(new Vector2(x >>> 0, y >>> 0));
+
+		return (tile.wall.length != 0);
 	}
 
 	_drawFrame(seconds) {

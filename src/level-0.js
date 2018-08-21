@@ -10,36 +10,23 @@ const TILE_SIZE = 1;
 // parametry mapy
 const EMPTY = 0;
 const WALL = 1;
-const PLAYER_MARK = 2;
-
-const PLAYER_COR = 0.5
 
 // mapa
 const MAP = [
-	[WALL, WALL, WALL, WALL, WALL],
-	[WALL, EMPTY, EMPTY, EMPTY, WALL],
-	[WALL, EMPTY, PLAYER_MARK, EMPTY, WALL],
-	[WALL, EMPTY, EMPTY, EMPTY, WALL],
-	[WALL, WALL, WALL, WALL, WALL]
+	[WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL],
+	[WALL, EMPTY, EMPTY, EMPTY, WALL, EMPTY, EMPTY, EMPTY, WALL],
+	[WALL, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, WALL],
+	[WALL, EMPTY, EMPTY, EMPTY, WALL, EMPTY, EMPTY, EMPTY, WALL],
+	[WALL, WALL, WALL, WALL, WALL, WALL, EMPTY, WALL, WALL],
+	[WALL, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, WALL],
+	[WALL, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, WALL],
+	[WALL, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, WALL],
+	[WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL, WALL]
 ];
 
 function get() {
 	// poloha hrace
 	let playerPosition = null;
-
-	MAP.forEach((line, y) => {
-		let mainLoop = true;
-
-		line.forEach((i, x) => {
-			if (i == PLAYER_MARK) {
-				playerPosition = new Vector2(x + PLAYER_COR, y + PLAYER_COR);
-				mainLoop = false;
-			}
-			else return true;
-		});
-
-		return mainLoop;
-	});
 
 	// naplneni
 	let height = MAP.length;
@@ -63,10 +50,7 @@ function get() {
 	items[0][2].setMaterial(Params.MATERIAL.PRISON);
 	items[1][4].setMaterial(Params.MATERIAL.STONE);
 
-	return {
-		level: new Level(items),
-		playerPosition
-	};
+	return new Level(items);
 }
 
 export default get();
