@@ -34,7 +34,7 @@ function get() {
 
 	for (let y = 0; y < height; y++) {
 		items.push(MAP[y].map((code, x) => {
-			let tile = new Tile(x, y, TILE_SIZE, TILE_SIZE);
+			let tile = new Tile(new Vector2(x, y), TILE_SIZE, TILE_SIZE);
 
 			switch (code) {
 				case WALL:

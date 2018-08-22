@@ -15,8 +15,9 @@ let params = {
 	DRAW_WIDTH: 1,
 	TEXTURE_SIZE,
 	TILE_HEIGHT: 1.2,
-	LIGHT_RANGE: 5,
+	LIGHT_RANGE: 10,
 	GRID_SIZE: 1,
+	SPRITE_WIDTH: 1,
 	RAY_DIRECTION: new Vector2(0, 1),
 	CROSSHAIR_WIDTH: 1,
 	MATERIAL: {
@@ -42,6 +43,9 @@ let params = {
 	TEXTURES: {
 		MAIN: "/img/texture.png",
 		GUN: "/img/gun.png"
+	},
+	SPRITES: {
+		LIGHT: 0
 	}
 };
 

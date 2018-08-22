@@ -5,6 +5,7 @@ import Vector2 from "./vector2";
 import Ray from "./ray";
 import Line from "./line";
 import Params from "./params";
+import Sprite from "./sprite";
 import * as myMath from "./math";
 
 export default class Game {
@@ -13,10 +14,10 @@ export default class Game {
 		this._lastTime = 0;
 		this._level = Level0;
 		this._player = this._getPlayer(new Vector2(2.5, 2.5));
+		this._sprites = [new Sprite(Params.SPRITES.LIGHT, new Vector2(1.5, 1.5))];
 		this._render = new Render({
 			width: Params.SIZE.WIDTH,
-			height: Params.SIZE.HEIGHT,
-			noShadow: true
+			height: Params.SIZE.HEIGHT
 		});
 		this._keys = {
 			left: false,
@@ -109,7 +110,7 @@ export default class Game {
 		let y = Params.PLAYER_MOVE_DIRECTION * seconds * dir + minDistance * dir;
 
 		// novy smerovy vektor posunuty podle hrace
-		return (this._moveVector(new Vector2(0, y), this._player.yaw))
+		return (myMath.moveVector(new Vector2(0, y), this._player.yaw))
 	}
 
 	_isBlocking(x, y) {
@@ -131,6 +132,10 @@ export default class Game {
 
 			// vykreslime zed
 			this._render.drawWall(columnData);
+			// sprite
+			columnData.sprites.forEach(sprite => {
+				this._render.drawSprite(columnData, sprite);
+			});
 			// zbran a zamerovac
 			this._render.drawCrosshair(seconds);
 			this._render.drawGun(seconds);
@@ -141,8 +146,9 @@ export default class Game {
 	}
 
 	_columnData(x, angle) {
-		let ray = this._generateRay(angle);
-		let track = this._track(ray, angle / 180 * Math.PI);
+		let ray = new Ray(this._player.position.clone(), myMath.moveVector(Params.RAY_DIRECTION, angle));
+		let spritesTable = this._getSpritesTable(angle);
+		let track = this._track(ray, spritesTable);
 		// vzdalenost oka ke zdi - vynasobeni cos kvuli rybimu oku
 		let z = track.distance * Math.cos((this._player.yaw - angle) / 180 * Math.PI);
 		// vyska zdi
@@ -161,8 +167,40 @@ export default class Game {
 			top,
 			tx,
 			ty,
-			lightRatio
+			lightRatio,
+			sprites: track.sprites
 		};
+	}
+
+	_getSpritesTable(angle) {
+		let table = {};
+
+		this._sprites.forEach(sprite => {
+			let line = sprite.getLine(angle);
+			let item = {
+				line,
+				type: sprite.type
+			};
+			let startPos = (line.start.x >>> 0) + "|" + (line.start.y >>> 0);
+			let endPos = (line.end.x >>> 0) + "|" + (line.end.y >>> 0);
+
+			// vytvorime
+			if (!(startPos in table)) {
+				table[startPos] = [];
+			}
+
+			if (!(endPos in table)) {
+				table[endPos] = [];
+			}
+
+			table[startPos].push(item);
+
+			if (startPos != endPos) {
+				table[endPos].push(item);
+			}
+		});
+
+		return table;
 	}
 
 	_getPlayer(pos) {
@@ -172,29 +210,32 @@ export default class Game {
 		return player;
 	}
 
-	_generateRay(angle = 0) {
-		return new Ray(this._player.position.clone(), this._moveVector(Params.RAY_DIRECTION, angle));
-	}
-
-	_moveVector(v, angle = 0) {
-		let rad = (360 - angle) / 180 * Math.PI;
-		let x = v.x * Math.cos(rad) - v.y * Math.sin(rad);
-		let y = v.x * Math.sin(rad) + v.y * Math.cos(rad);
-
-		// -y = protoze chceme nahoru odecitat, ne pricitat
-		return (new Vector2(x, -y));
-	}
-
-	_track(ray) {
+	_track(ray, spritesTable) {
 		let output = {
 			distance: 0,
 			tile: null,
-			perc: 0
+			perc: 0,
+			sprites: []
 		};
 
 		myMath.castRayTrack(ray, posVec => {
 			let lineOutput;
 			let tile = this._level.getTile(posVec);
+			let pos = posVec.x + "|" + posVec.y;
+
+			if (pos in spritesTable) {
+				spritesTable[pos].forEach(item => {
+					let spriteHit = myMath.rayLineIntersection(ray, item.line);
+
+					if (spriteHit) {
+						output.sprites.push({
+							distance: ray.origin.distance(spriteHit),
+							perc: item.line.getPerc(spriteHit),
+							type: item.type
+						});
+					}
+				});
+			}
 
 			// je tam zed, dal nepokracujeme
 			if (tile.wall.length) {
@@ -211,22 +252,25 @@ export default class Game {
 					}
 				});
 
-				if (allHits.length) {
-					allHits.sort((a, b) => {
-						return (a.distance - b.distance);
-					});
+				allHits.sort((a, b) => {
+					return (a.distance - b.distance);
+				});
 
-					// prvni hit je vystupem
-					output = Object.assign(allHits[0], {
-						tile
-					});
-				}
+				// prvni hit je vystupem
+				let topItem = allHits[0];
+				output.distance = topItem.distance;
+				output.tile = tile;
+				output.perc = topItem.perc;
 
 				// ukoncime
 				lineOutput = true;
 			}
 
 			return lineOutput;
+		});
+
+		output.sprites.sort((a, b) => {
+			return (a.distance - b.distance);
 		});
 
 		return output;

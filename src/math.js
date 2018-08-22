@@ -107,3 +107,12 @@ export function bresenhamLine(ray, stepCb) {
 		}
 	}
 }
+
+export function moveVector(v, angle = 0) {
+	let rad = (360 - angle) / 180 * Math.PI;
+	let x = v.x * Math.cos(rad) - v.y * Math.sin(rad);
+	let y = v.x * Math.sin(rad) + v.y * Math.cos(rad);
+
+	// -y = protoze chceme nahoru odecitat, ne pricitat
+	return (new Vector2(x, -y));
+}

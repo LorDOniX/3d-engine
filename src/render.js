@@ -74,6 +74,24 @@ export default class Render {
 		}
 	}
 
+	drawSprite(columnData, sprite) {
+		let material;
+
+		switch (sprite.type) {
+			case Params.SPRITES.LIGHT:
+				material = Params.MATERIAL.LIGHT;
+				break;
+		}
+		
+		let tx = material.x;
+		let ty = material.y;
+
+		for (let i = 0; i < Params.DRAW_WIDTH; i++) {
+			// po 1px
+			this._ctx.drawImage(this._textures.main, columnData.tx, columnData.ty, 1, Params.TEXTURE_SIZE, columnData.x + i, columnData.top, 1, columnData.height);
+		}
+	}
+
 	drawGun(seconds) {
 		let width = this._opts.width * 0.25;
 		let height = width;

@@ -3,10 +3,10 @@ import Line from "./line";
 import Params from "./params";
 
 export default class Tile {
-	constructor(x, y, width = 1, height = 1) {
+	constructor(position, width = 1, height = 1) {
+		this._position = position;
 		this._width = width;
 		this._height = height;
-		this._position = new Vector2(x, y);
 		this._center = null;
 		this._aabb = null;
 		this._wall = [];
@@ -44,10 +44,10 @@ export default class Tile {
 	}
 
 	createWall(x, y) {
-		this._wall.push(new Line(x, y, x + this._width, y));
-		this._wall.push(new Line(x + this._width, y, x + this._width, y + this._height));
-		this._wall.push(new Line(x + this._width, y + this._height, x, y + this._height));
-		this._wall.push(new Line(x, y + this._height, x, y));
+		this._wall.push(new Line(new Vector2(x, y), new Vector2(x + this._width, y)));
+		this._wall.push(new Line(new Vector2(x + this._width, y), new Vector2(x + this._width, y + this._height)));
+		this._wall.push(new Line(new Vector2(x + this._width, y + this._height), new Vector2(x, y + this._height)));
+		this._wall.push(new Line(new Vector2(x, y + this._height), new Vector2(x, y)));
 	}
 
 	setMaterial(material) {
