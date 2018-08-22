@@ -47,7 +47,9 @@ function get() {
 		}));
 	}
 
+	items[0][1].setMaterial(Params.MATERIAL.EAGLE);
 	items[0][2].setMaterial(Params.MATERIAL.PRISON);
+	items[0][3].setMaterial(Params.MATERIAL.EAGLE);
 	items[1][4].setMaterial(Params.MATERIAL.STONE);
 
 	return new Level(items);

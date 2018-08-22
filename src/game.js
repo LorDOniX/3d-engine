@@ -14,8 +14,8 @@ export default class Game {
 		this._level = Level0;
 		this._player = this._getPlayer(new Vector2(2.5, 2.5));
 		this._render = new Render({
-			width: 1024,
-			height: 768,
+			width: Params.SIZE.WIDTH,
+			height: Params.SIZE.HEIGHT,
 			noShadow: true
 		});
 		this._keys = {
@@ -48,6 +48,9 @@ export default class Game {
 					case 39: this._keys.right = true; break; // vpravo
 					case 38: this._keys.up = true; break; // vpred
 					case 40: this._keys.down = true; break; // vpred
+					case 17:
+						this._render.shoot();
+						break;
 				}
 				break;
 
@@ -102,7 +105,8 @@ export default class Game {
 
 	_getMoveVector(seconds, withMinDistance) {
 		let minDistance = withMinDistance ? Params.MIN_DISTANCE : 0;
-		let y = (Params.PLAYER_MOVE_DIRECTION + minDistance) * seconds * (this._keys.up ? 1 : -1);
+		let dir = this._keys.up ? 1 : -1;
+		let y = Params.PLAYER_MOVE_DIRECTION * seconds * dir + minDistance * dir;
 
 		// novy smerovy vektor posunuty podle hrace
 		return (this._moveVector(new Vector2(0, y), this._player.yaw))
@@ -127,6 +131,9 @@ export default class Game {
 
 			// vykreslime zed
 			this._render.drawWall(columnData);
+			// zbran a zamerovac
+			this._render.drawCrosshair(seconds);
+			this._render.drawGun(seconds);
 
 			// pro dalsi uhel
 			angle += angleInc;
@@ -143,7 +150,7 @@ export default class Game {
 		// spodni hrana
 		let top = (this._render.height / 2 * (1 + 1 / z)) - height;
 		// u x chceme pouze prouzek
-		let tx = track.tile.material.x + Math.round(track.perc * Params.TEXTURE_SIZE);
+		let tx = track.tile.material.x + Math.round(track.perc * (Params.TEXTURE_SIZE - 1));
 		// y se bere cele
 		let ty = track.tile.material.y;
 		let lightRatio = Math.max(track.distance / Params.LIGHT_RANGE, 0);
