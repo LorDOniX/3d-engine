@@ -52,7 +52,8 @@ let params = {
 		EAGLE: { x: TEXTURE_SIZE * 3, y: 0 },
 		LIGHT: { x: TEXTURE_SIZE * 4, y: 0 },
 		STONE: { x: TEXTURE_SIZE * 5, y: 0 },
-		PRISON: { x: TEXTURE_SIZE * 8, y: 0 }
+		PRISON: { x: TEXTURE_SIZE * 8, y: 0 },
+		TABLE: { x: TEXTURE_SIZE * 11, y: 0 }
 	},
 	COLORS: {
 		CELLAR: "#505050",
@@ -68,6 +69,11 @@ let params = {
 	TEXTURES: {
 		MAIN: "/img/texture.png",
 		GUN: "/img/gun.png"
+	},
+	GUN: {
+		// 6 obrazku, 5 kroku
+		STEPS: 6,
+		DURATION: 550
 	}
 };
 

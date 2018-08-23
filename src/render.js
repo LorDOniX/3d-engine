@@ -14,14 +14,6 @@ export default class Render {
 		this._textures = {};
 		this._el = this._create();
 		this._ctx = this._el.getContext("2d");
-		this._gunData = {
-			start: 0,
-			now: 0,
-			end: 0,
-			// 6 obrazku, 5 kroku
-			steps: 6,
-			duration: 550 // [s]
-		};
 
 		this.clear();
 	}
@@ -36,6 +28,14 @@ export default class Render {
 
 	get height() {
 		return this._opts.height;
+	}
+
+	get ctx() {
+		return this._ctx;
+	}
+
+	get textures() {
+		return this._textures;
 	}
 
 	async load() {
@@ -53,20 +53,19 @@ export default class Render {
 		this._ctx.fillRect(0, middleY, this._opts.width, this._opts.height);
 	}
 
-	drawRectangle(x, y, width, height, color) {
-		this._ctx.fillStyle = color || Params.COLORS.BLACK;
-		this._ctx.fillRect(x, y, width, height);
-	}
-
-	drawWall(x, wallData) {
-		// render zdi
-		let tx = wallData.material.x + Math.round(wallData.perc * (Params.TEXTURE_SIZE - 1));
-		let ty = wallData.material.y;
+	drawTexture(x, data) {
+		// render textury
+		let tx = data.material.x + Math.round(data.perc * (Params.TEXTURE_SIZE - 1));
+		let ty = data.material.y;
 
 		for (let i = 0; i < Params.DRAW_WIDTH; i++) {
 			// po 1px
-			this._ctx.drawImage(this._textures.main, tx, ty, 1, Params.TEXTURE_SIZE, x + i, wallData.top, 1, wallData.height);
+			this._ctx.drawImage(this._textures.main, tx, ty, 1, Params.TEXTURE_SIZE, x + i, data.top, 1, data.height);
 		}
+	}
+
+	drawWall(x, wallData) {
+		this.drawTexture(x, wallData);
 
 		// svetelnost zdi
 		if (!this._opts.noShadow) {
@@ -76,72 +75,7 @@ export default class Render {
 			this._ctx.globalAlpha = 1;
 		}
 	}
-
-	drawSprite(columnData, sprite) {
-		let material;
-
-		switch (sprite.type) {
-			case Params.SPRITES.LIGHT:
-				material = Params.MATERIAL.LIGHT;
-				break;
-		}
-		
-		let tx = material.x;
-		let ty = material.y;
-
-		for (let i = 0; i < Params.DRAW_WIDTH; i++) {
-			// po 1px
-			this._ctx.drawImage(this._textures.main, columnData.tx, columnData.ty, 1, Params.TEXTURE_SIZE, columnData.x + i, columnData.top, 1, columnData.height);
-		}
-	}
-
-	drawGun(seconds) {
-		let width = this._opts.width * 0.25;
-		let height = width;
-		let x = this._opts.width * 7 / 8 - width;
-		let y = this._opts.height - height;
-		let tx = 0;
-
-		if (this._gunData.start) {
-			this._gunData.now += seconds;
-
-			if (this._gunData.now > this._gunData.end) {
-				this._gunData.start = 0;
-				this._gunData.now = this._gunData.end;
-			}
-
-			let stepSeconds = this._gunData.duration / this._gunData.steps;
-			let diff = this._gunData.now - this._gunData.start;
-
-			tx = diff / stepSeconds >>> 0;
-		}
-
-		// zbran
-		this._ctx.drawImage(this._textures.gun, tx * Params.TEXTURE_SIZE, 0, Params.TEXTURE_SIZE, Params.TEXTURE_SIZE, x, y, width, height);
-	}
-
-	drawCrosshair() {
-		let x = Math.round(this._opts.width * 0.5);
-		let y = Math.round(this._opts.height * 0.5);
-		let len = Math.round(this._opts.width * 0.02);
-		let gap = Math.round(this._opts.width * 0.008);
-
-		this._ctx.fillStyle = Params.COLORS.WHITE;
-		this._ctx.fillRect(x - gap - len, y, len, Params.CROSSHAIR_WIDTH);
-		this._ctx.fillRect(x + gap, y, len, Params.CROSSHAIR_WIDTH);
-		this._ctx.fillRect(x, y - gap - len, Params.CROSSHAIR_WIDTH, len);
-		this._ctx.fillRect(x, y + gap, Params.CROSSHAIR_WIDTH, len);
-		this._ctx.fillRect(x, y, Params.CROSSHAIR_WIDTH, Params.CROSSHAIR_WIDTH);
-	}
-
-	shoot() {
-		if (this._gunData.start) return;
-
-		this._gunData.start = Date.now();
-		this._gunData.now = this._gunData.start;
-		this._gunData.end = this._gunData.start + this._gunData.duration;
-	}
-
+	
 	_create() {
 		let canvas = $dom.create({
 			el: "canvas"

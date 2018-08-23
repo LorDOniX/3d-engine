@@ -6,6 +6,7 @@ import Ray from "./ray";
 import Line from "./line";
 import Params from "./params";
 import Sprite from "./sprite";
+import Gun from "./gun";
 import * as myMath from "./math";
 
 export default class Game {
@@ -14,11 +15,16 @@ export default class Game {
 		this._lastTime = 0;
 		this._level = Level0;
 		this._player = this._getPlayer(new Vector2(2.5, 2.5));
-		this._sprites = [new Sprite(Params.MATERIAL.LIGHT, new Vector2(1.5, 1.5))];
+		this._sprites = [
+			new Sprite(Params.MATERIAL.LIGHT, new Vector2(1.5, 1.5)),
+			new Sprite(Params.MATERIAL.TABLE, new Vector2(3.5, 1.5)),
+			new Sprite(Params.MATERIAL.BARREL, new Vector2(1.5, 3.5))
+		];
 		this._render = new Render({
 			width: Params.SIZE.WIDTH,
 			height: Params.SIZE.HEIGHT
 		});
+		this._gun = new Gun(this._render);
 		this._keys = {
 			left: false,
 			right: false,
@@ -50,7 +56,7 @@ export default class Game {
 					case 38: this._keys.up = true; break; // vpred
 					case 40: this._keys.down = true; break; // vpred
 					case 17:
-						this._render.shoot();
+						this._gun.shoot();
 						break;
 				}
 				break;
@@ -140,9 +146,11 @@ export default class Game {
 			// vykreslime zed
 			this._render.drawWall(x, tileData.wall);
 
+			// sprites
+			this._drawSprites(x, ray, angle, Params.TILE_HEIGHT, tileData.tiles, spritesTable);
+
 			// zbran a zamerovac
-			this._render.drawCrosshair(seconds);
-			this._render.drawGun(seconds);
+			this._gun.draw(seconds);
 
 			// pro dalsi uhel
 			angle += angleInc;
@@ -154,10 +162,6 @@ export default class Game {
 
 		this._sprites.forEach(sprite => {
 			let line = sprite.getLine(angle);
-			let item = {
-				line,
-				type: sprite.type
-			};
 			let startPos = (line.start.x >>> 0) + "|" + (line.start.y >>> 0);
 			let endPos = (line.end.x >>> 0) + "|" + (line.end.y >>> 0);
 
@@ -170,10 +174,10 @@ export default class Game {
 				table[endPos] = [];
 			}
 
-			table[startPos].push(item);
+			table[startPos].push(line);
 
 			if (startPos != endPos) {
-				table[endPos].push(item);
+				table[endPos].push(line);
 			}
 		});
 
@@ -191,8 +195,8 @@ export default class Game {
 		let tiles = [];
 		let wall = null;
 
-		myMath.castRayTrack(ray, posVec => {
-			let tile = this._level.getTile(posVec);
+		myMath.castRayTrack(ray, position => {
+			let tile = this._level.getTile(position);
 
 			// je tam zed, dal nepokracujeme
 			if (tile.hasWalls) {
@@ -201,9 +205,15 @@ export default class Game {
 				return true;
 			}
 			else {
-				tiles.push(tile);
+				tiles.push({
+					tile,
+					position
+				});
 			}
 		});
+
+		// preskladame pole, chceme vykreslovat od konce
+		tiles.reverse();
 
 		return {
 			tiles,
@@ -215,7 +225,7 @@ export default class Game {
 		let hits = [];
 
 		tile.walls.forEach(line => {
-			let lineHit = this._getLineHit(ray, line, angle, tileHeight);
+			let lineHit = this._getLineHit(ray, line);
 
 			if (lineHit) {
 				hits.push(lineHit);
@@ -258,5 +268,29 @@ export default class Game {
 			height,
 			top
 		};
+	}
+
+	_drawSprites(x, ray, angle, tileHeight, tiles, spritesTable) {
+		tiles.forEach(item => {
+			let pos = item.position.x + "|" + item.position.y;
+
+			if (pos in spritesTable) {
+				let hits = [];
+
+				spritesTable[pos].forEach(line => {
+					let lineHit = this._getLineHit(ray, line);
+
+					if (lineHit) {
+						hits.push(Object.assign(this._project(lineHit.distance, angle, tileHeight), lineHit));
+					}
+				});
+
+				if (hits.length) {
+					hits.forEach(data => {
+						this._render.drawTexture(x, data);
+					});
+				}
+			}
+		});
 	}
 }

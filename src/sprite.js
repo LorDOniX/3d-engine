@@ -23,6 +23,6 @@ export default class Sprite {
 		let startPos = this._center.plus(start);
 		let endPos = this._center.plus(end);
 
-		return new Line(startPos, endPos);
+		return new Line(startPos, endPos, this._material);
 	}
 }
