@@ -18,7 +18,8 @@ export default class Game {
 		this._sprites = [
 			new Sprite(Params.MATERIAL.LIGHT, new Vector2(1.5, 1.5)),
 			new Sprite(Params.MATERIAL.TABLE, new Vector2(3.5, 1.5)),
-			new Sprite(Params.MATERIAL.BARREL, new Vector2(1.5, 3.5))
+			new Sprite(Params.MATERIAL.BARREL, new Vector2(1.5, 3.5)),
+			new Sprite(Params.MATERIAL.COLUMN, new Vector2(2, 2.5)),
 		];
 		this._render = new Render({
 			width: Params.SIZE.WIDTH,
@@ -271,6 +272,7 @@ export default class Game {
 	}
 
 	_drawSprites(x, ray, angle, tileHeight, tiles, spritesTable) {
+		// prochazime od nejvzdalenejsich
 		tiles.forEach(item => {
 			let pos = item.position.x + "|" + item.position.y;
 
@@ -280,7 +282,7 @@ export default class Game {
 				spritesTable[pos].forEach(line => {
 					let lineHit = this._getLineHit(ray, line);
 
-					if (lineHit) {
+					if (lineHit && lineHit.distance > Params.SPRITE_MIN_DISTANCE) {
 						hits.push(Object.assign(this._project(lineHit.distance, angle, tileHeight), lineHit));
 					}
 				});

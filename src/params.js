@@ -20,6 +20,7 @@ let params = {
 	SPRITE_WIDTH: 1,
 	RAY_DIRECTION: new Vector2(0, 1),
 	CROSSHAIR_WIDTH: 1,
+	SPRITE_MIN_DISTANCE: 0.5,
 	LIGHT_INTENSITY: [{
 		from: 0,
 		to: 3,
@@ -53,7 +54,8 @@ let params = {
 		LIGHT: { x: TEXTURE_SIZE * 4, y: 0 },
 		STONE: { x: TEXTURE_SIZE * 5, y: 0 },
 		PRISON: { x: TEXTURE_SIZE * 8, y: 0 },
-		TABLE: { x: TEXTURE_SIZE * 11, y: 0 }
+		TABLE: { x: TEXTURE_SIZE * 11, y: 0 },
+		COLUMN: { x: TEXTURE_SIZE * 7, y: 0 }
 	},
 	COLORS: {
 		CELLAR: "#505050",
