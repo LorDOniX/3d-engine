@@ -4,9 +4,6 @@ import Line from "./line";
 import Vector2 from "./vector2";
 import Params from "./params";
 
-// velikost dlazdice
-const TILE_SIZE = 1;
-
 // parametry mapy
 const EMPTY = 0;
 const WALL = 1;
@@ -34,12 +31,11 @@ function get() {
 
 	for (let y = 0; y < height; y++) {
 		items.push(MAP[y].map((code, x) => {
-			let tile = new Tile(new Vector2(x, y), TILE_SIZE, TILE_SIZE);
+			let tile = new Tile(new Vector2(x, y), Params.GRID_SIZE, Params.GRID_SIZE);
 
 			switch (code) {
 				case WALL:
-					tile.createWall(x, y);
-					tile.setMaterial(Params.MATERIAL.WALL);
+					tile.createWalls(x, y, Params.MATERIAL.WALL);
 					break;
 			}
 
@@ -47,10 +43,10 @@ function get() {
 		}));
 	}
 
-	items[0][1].setMaterial(Params.MATERIAL.EAGLE);
-	items[0][2].setMaterial(Params.MATERIAL.PRISON);
-	items[0][3].setMaterial(Params.MATERIAL.EAGLE);
-	items[1][4].setMaterial(Params.MATERIAL.STONE);
+	items[0][1].walls.forEach(wall => wall.material = Params.MATERIAL.EAGLE);
+	items[0][2].walls.forEach(wall => wall.material = Params.MATERIAL.PRISON);
+	items[0][3].walls.forEach(wall => wall.material = Params.MATERIAL.EAGLE);
+	items[1][4].walls.forEach(wall => wall.material = Params.MATERIAL.STONE);
 
 	return new Level(items);
 }

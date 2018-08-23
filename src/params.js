@@ -20,8 +20,33 @@ let params = {
 	SPRITE_WIDTH: 1,
 	RAY_DIRECTION: new Vector2(0, 1),
 	CROSSHAIR_WIDTH: 1,
+	LIGHT_INTENSITY: [{
+		from: 0,
+		to: 3,
+		value: 1
+	}, {
+		from: 3,
+		to: 6,
+		value: 0.9
+	}, {
+		from: 6,
+		to: 9,
+		value: 0.8
+	}, {
+		from: 9,
+		to: 12,
+		value: 0.7
+	}, {
+		from: 12,
+		to: 15,
+		value: 0.6
+	}, {
+		from: 15,
+		to: 0,
+		value: 0.5
+	}],
 	MATERIAL: {
-		EMPTY: { x: -1, y: -1 },
+		EMPTY: null,
 		BARREL: { x: 0, y: 0 },
 		WALL: { x: TEXTURE_SIZE, y: 0 },
 		EAGLE: { x: TEXTURE_SIZE * 3, y: 0 },
@@ -43,9 +68,6 @@ let params = {
 	TEXTURES: {
 		MAIN: "/img/texture.png",
 		GUN: "/img/gun.png"
-	},
-	SPRITES: {
-		LIGHT: 0
 	}
 };
 

@@ -58,18 +58,21 @@ export default class Render {
 		this._ctx.fillRect(x, y, width, height);
 	}
 
-	drawWall(columnData) {
+	drawWall(x, wallData) {
 		// render zdi
+		let tx = wallData.material.x + Math.round(wallData.perc * (Params.TEXTURE_SIZE - 1));
+		let ty = wallData.material.y;
+
 		for (let i = 0; i < Params.DRAW_WIDTH; i++) {
 			// po 1px
-			this._ctx.drawImage(this._textures.main, columnData.tx, columnData.ty, 1, Params.TEXTURE_SIZE, columnData.x + i, columnData.top, 1, columnData.height);
+			this._ctx.drawImage(this._textures.main, tx, ty, 1, Params.TEXTURE_SIZE, x + i, wallData.top, 1, wallData.height);
 		}
 
 		// svetelnost zdi
 		if (!this._opts.noShadow) {
 			this._ctx.fillStyle = Params.COLORS.BLACK;
-			this._ctx.globalAlpha = columnData.lightRatio;
-			this._ctx.fillRect(columnData.x, columnData.top, Params.DRAW_WIDTH, columnData.height);
+			this._ctx.globalAlpha = this._countLightning(wallData.distance);
+			this._ctx.fillRect(x, wallData.top, Params.DRAW_WIDTH, wallData.height);
 			this._ctx.globalAlpha = 1;
 		}
 	}
@@ -160,5 +163,19 @@ export default class Render {
 			};
 			img.src = src;
 		});
+	}
+
+	_countLightning(distance) {
+		let lightning;
+		let len = Params.LIGHT_INTENSITY.length - 1;
+
+		Params.LIGHT_INTENSITY.every((intData, ind) => {
+			if ((intData.from <= distance && intData.to > distance) || ind == len) {
+				lightning = intData.value;
+			}
+			else return true;
+		});
+
+		return (1 - lightning);
 	}
 }

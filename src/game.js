@@ -14,7 +14,7 @@ export default class Game {
 		this._lastTime = 0;
 		this._level = Level0;
 		this._player = this._getPlayer(new Vector2(2.5, 2.5));
-		this._sprites = [new Sprite(Params.SPRITES.LIGHT, new Vector2(1.5, 1.5))];
+		this._sprites = [new Sprite(Params.MATERIAL.LIGHT, new Vector2(1.5, 1.5))];
 		this._render = new Render({
 			width: Params.SIZE.WIDTH,
 			height: Params.SIZE.HEIGHT
@@ -116,7 +116,7 @@ export default class Game {
 	_isBlocking(x, y) {
 		let tile = this._level.getTile(new Vector2(x >>> 0, y >>> 0));
 
-		return (tile.wall.length != 0);
+		return (tile.hasWalls);
 	}
 
 	_drawFrame(seconds) {
@@ -127,15 +127,19 @@ export default class Game {
 		this._render.clear();
 
 		// pro kazdy sloupec
-		for (let x = 0; x < steps; x++) {
-			let columnData = this._columnData(x * Params.DRAW_WIDTH, angle);
+		for (let stepX = 0; stepX < steps; stepX++) {
+			// tabulka spritu pro kazdy uhel
+			let spritesTable = this._getSpritesTable(angle);
+			// aktualni x
+			let x = stepX * Params.DRAW_WIDTH;
+			// paprsek
+			let ray = new Ray(this._player.position.clone(), myMath.moveVector(Params.RAY_DIRECTION, angle));
+			// seznam tile
+			let tileData = this._tileData(ray, angle, Params.TILE_HEIGHT);
 
 			// vykreslime zed
-			this._render.drawWall(columnData);
-			// sprite
-			columnData.sprites.forEach(sprite => {
-				this._render.drawSprite(columnData, sprite);
-			});
+			this._render.drawWall(x, tileData.wall);
+
 			// zbran a zamerovac
 			this._render.drawCrosshair(seconds);
 			this._render.drawGun(seconds);
@@ -143,33 +147,6 @@ export default class Game {
 			// pro dalsi uhel
 			angle += angleInc;
 		}
-	}
-
-	_columnData(x, angle) {
-		let ray = new Ray(this._player.position.clone(), myMath.moveVector(Params.RAY_DIRECTION, angle));
-		let spritesTable = this._getSpritesTable(angle);
-		let track = this._track(ray, spritesTable);
-		// vzdalenost oka ke zdi - vynasobeni cos kvuli rybimu oku
-		let z = track.distance * Math.cos((this._player.yaw - angle) / 180 * Math.PI);
-		// vyska zdi
-		let height = this._render.height * Params.TILE_HEIGHT / z;
-		// spodni hrana
-		let top = (this._render.height / 2 * (1 + 1 / z)) - height;
-		// u x chceme pouze prouzek
-		let tx = track.tile.material.x + Math.round(track.perc * (Params.TEXTURE_SIZE - 1));
-		// y se bere cele
-		let ty = track.tile.material.y;
-		let lightRatio = Math.max(track.distance / Params.LIGHT_RANGE, 0);
-
-		return {
-			x,
-			height,
-			top,
-			tx,
-			ty,
-			lightRatio,
-			sprites: track.sprites
-		};
 	}
 
 	_getSpritesTable(angle) {
@@ -210,69 +187,76 @@ export default class Game {
 		return player;
 	}
 
-	_track(ray, spritesTable) {
-		let output = {
-			distance: 0,
-			tile: null,
-			perc: 0,
-			sprites: []
-		};
+	_tileData(ray, angle, tileHeight) {
+		let tiles = [];
+		let wall = null;
 
 		myMath.castRayTrack(ray, posVec => {
-			let lineOutput;
 			let tile = this._level.getTile(posVec);
-			let pos = posVec.x + "|" + posVec.y;
-
-			if (pos in spritesTable) {
-				spritesTable[pos].forEach(item => {
-					let spriteHit = myMath.rayLineIntersection(ray, item.line);
-
-					if (spriteHit) {
-						output.sprites.push({
-							distance: ray.origin.distance(spriteHit),
-							perc: item.line.getPerc(spriteHit),
-							type: item.type
-						});
-					}
-				});
-			}
 
 			// je tam zed, dal nepokracujeme
-			if (tile.wall.length) {
-				let allHits = [];
-
-				tile.wall.forEach(line => {
-					let lineHit = myMath.rayLineIntersection(ray, line);
-
-					if (lineHit) {
-						allHits.push({
-							distance: ray.origin.distance(lineHit),
-							perc: line.getPerc(lineHit)
-						});
-					}
-				});
-
-				allHits.sort((a, b) => {
-					return (a.distance - b.distance);
-				});
-
-				// prvni hit je vystupem
-				let topItem = allHits[0];
-				output.distance = topItem.distance;
-				output.tile = tile;
-				output.perc = topItem.perc;
-
+			if (tile.hasWalls) {
+				wall = this._getWall(ray, tile, angle, tileHeight);
 				// ukoncime
-				lineOutput = true;
+				return true;
 			}
-
-			return lineOutput;
+			else {
+				tiles.push(tile);
+			}
 		});
 
-		output.sprites.sort((a, b) => {
+		return {
+			tiles,
+			wall
+		};
+	}
+
+	_getWall(ray, tile, angle, tileHeight) {
+		let hits = [];
+
+		tile.walls.forEach(line => {
+			let lineHit = this._getLineHit(ray, line, angle, tileHeight);
+
+			if (lineHit) {
+				hits.push(lineHit);
+			}
+		});
+
+		hits.sort((a, b) => {
 			return (a.distance - b.distance);
 		});
 
-		return output;
+		// vybrana line
+		let selLine = hits[0];
+
+		// vratime data
+		return Object.assign(this._project(selLine.distance, angle, tileHeight), selLine);
+	}
+
+	_getLineHit(ray, line) {
+		let lineHit = myMath.rayLineIntersection(ray, line);
+
+		if (lineHit) {
+			return {
+				distance: ray.origin.distance(lineHit),
+				perc: line.getPerc(lineHit),
+				material: line.material
+			};
+		}
+		else return null;
+	}
+
+	_project(distance, angle, tileHeight) {
+		// vzdalenost oka ke zdi - vynasobeni cos kvuli rybimu oku
+		let z = distance * Math.cos((this._player.yaw - angle) / 180 * Math.PI);
+		// vyska zdi
+		let height = this._render.height * tileHeight / z;
+		// spodni hrana
+		let top = (this._render.height / 2 * (1 + 1 / z)) - height;
+
+		return {
+			height,
+			top
+		};
 	}
 }

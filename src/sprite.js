@@ -4,8 +4,8 @@ import Line from "./line";
 import * as myMath from "./math";
 
 export default class Sprite {
-	constructor(type, center) {
-		this._type = type;
+	constructor(material, center) {
+		this._material = material;
 		this._center = center;
 	}
 
@@ -13,8 +13,8 @@ export default class Sprite {
 		return this._center;
 	}
 
-	get type() {
-		return this._type;
+	get material() {
+		return this._material;
 	}
 
 	getLine(angle) {

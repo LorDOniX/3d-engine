@@ -9,8 +9,7 @@ export default class Tile {
 		this._height = height;
 		this._center = null;
 		this._aabb = null;
-		this._wall = [];
-		this._material = Params.MATERIAL.EMPTY;
+		this._walls = [];
 
 		this._update();
 	}
@@ -35,23 +34,19 @@ export default class Tile {
 		return this._position;
 	}
 
-	get wall() {
-		return this._wall;
+	get walls() {
+		return this._walls;
 	}
 
-	get material() {
-		return this._material;
+	get hasWalls() {
+		return (this._walls.length > 0);
 	}
 
-	createWall(x, y) {
-		this._wall.push(new Line(new Vector2(x, y), new Vector2(x + this._width, y)));
-		this._wall.push(new Line(new Vector2(x + this._width, y), new Vector2(x + this._width, y + this._height)));
-		this._wall.push(new Line(new Vector2(x + this._width, y + this._height), new Vector2(x, y + this._height)));
-		this._wall.push(new Line(new Vector2(x, y + this._height), new Vector2(x, y)));
-	}
-
-	setMaterial(material) {
-		this._material = material;
+	createWalls(x, y, lineMaterial) {
+		this._walls.push(new Line(new Vector2(x, y), new Vector2(x + this._width, y), lineMaterial));
+		this._walls.push(new Line(new Vector2(x + this._width, y), new Vector2(x + this._width, y + this._height), lineMaterial));
+		this._walls.push(new Line(new Vector2(x + this._width, y + this._height), new Vector2(x, y + this._height), lineMaterial));
+		this._walls.push(new Line(new Vector2(x, y + this._height), new Vector2(x, y), lineMaterial));
 	}
 
 	_update() {
